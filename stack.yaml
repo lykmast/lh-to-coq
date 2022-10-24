@@ -1,0 +1,17 @@
+allow-newer: true
+resolver: lts-18.27
+compiler: ghc-8.10.7
+packages:
+  - .
+extra-deps:
+  - git: https://github.com/ucsd-progsys/liquidhaskell
+    commit: 3c6da45b2ab591080566dbf7c5edc44af8539a2e
+    subdirs:
+      - .
+      - liquid-base
+      - liquid-prelude
+      - liquid-ghc-prim
+      - liquid-containers
+  - git: https://github.com/ucsd-progsys/liquid-fixpoint
+    commit: f6af0464c0b2ccd908075d5254864dbcf73f8e7a
+  - rest-rewrite-0.4.0@sha256:be93d899f7dece33f2a7613eb3dabd24d139f9cb2fc09f9efedfdce4ba6eb276,3923
