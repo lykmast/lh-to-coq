@@ -15,6 +15,7 @@ data PNat = Z | S PNat
 add Z n = n
 add (S m) n = S (add m n)
 -- | Addition left identity.
+
 {-@ add_lid :: n:PNat -> {add n Z = n} @-}
 add_lid Z     = ()
 add_lid (S n) = add_lid n

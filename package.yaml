@@ -6,6 +6,10 @@ name: lh-to-coq
 # To avoid duplicated efforts in documentation and dealing with the
 # complications of embedding Haddock markup inside cabal files, it is
 # common to point users to the README.md file.
+ghc-options:
+    -fhide-source-paths
+    -freverse-errors
+
 executable:
   main: Main.hs
   source-dirs: app
@@ -14,8 +18,9 @@ executable:
 dependencies:
   - liquid-base
   - liquidhaskell
-  - liquid-prelude
   - containers
+  - liquid-fixpoint
+  - mtl
   - ghc
 
 library:

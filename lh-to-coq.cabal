@@ -13,18 +13,21 @@ library
       LHToCoq
   other-modules:
       Coq
+      CoreToLH
       LH
-      Translate
+      SpecToLH
       Util
       Paths_lh_to_coq
   hs-source-dirs:
       src
+  ghc-options: -fhide-source-paths -freverse-errors
   build-depends:
       containers
     , ghc
     , liquid-base
-    , liquid-prelude
+    , liquid-fixpoint
     , liquidhaskell
+    , mtl
   default-language: Haskell2010
 
 executable lh-to-coq
@@ -33,11 +36,13 @@ executable lh-to-coq
       Paths_lh_to_coq
   hs-source-dirs:
       app
+  ghc-options: -fhide-source-paths -freverse-errors
   build-depends:
       containers
     , ghc
     , lh-to-coq
     , liquid-base
-    , liquid-prelude
+    , liquid-fixpoint
     , liquidhaskell
+    , mtl
   default-language: Haskell2010
