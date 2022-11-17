@@ -1,3 +1,4 @@
+
 module Util
   ( module Data.Maybe
   , module Util
@@ -10,7 +11,7 @@ import Data.List(intercalate, partition)
 import Data.Maybe
 import Control.Applicative((<|>))
 import Data.Functor((<&>))
-
+import qualified Data.Bifunctor as B
 type Id = String
 
 addParens :: String -> String
@@ -41,3 +42,6 @@ modifyAt xs i f = take i xs ++ [f $ xs !! i] ++ drop (i + 1) xs
 
 deleteAt :: [a] -> Int -> [a]
 deleteAt xs n = take n xs ++ drop (n+1) xs
+
+unzipMaybe :: Maybe (a,b) -> (Maybe a, Maybe b)
+unzipMaybe = maybe (Nothing,Nothing) (B.bimap Just Just)

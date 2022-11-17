@@ -1,5 +1,3 @@
-{-# LANGUAGE TupleSections #-}
-
 module LH where
 
 import qualified Coq as C
@@ -37,9 +35,9 @@ isProof = (== "()") . typeName . lhArgType . sigRes
 
 data Pat = Pat {patCon :: Id, patArgs :: [Id]} deriving Show
 
-data LHExpr = And [LHExpr] 
-            | Brel Brel LHExpr LHExpr 
-            | LHApp Id [LHExpr] 
+data LHExpr = And [LHExpr]
+            | Brel Brel LHExpr LHExpr
+            | LHApp Id [LHExpr]
             | LHVar Id
             deriving Show
 
@@ -70,7 +68,7 @@ renameReft (LHVar id)     = LHVar  <$> rename id
 
 rename :: Id -> Reader Renames Id
 rename name = ask <&> (fromMaybe name . M.lookup name)
-    
+
 
 transLH :: Proof -> C.Proof
 transLH (Proof def@(Def name dArgs body) sig) =
@@ -121,12 +119,12 @@ transLHExpr (LHVar x)    = C.Var x
 transLHExpr e            = error "not an expression."
 
 transProp :: LHExpr -> C.Prop
-transProp (Brel brel e1 e2) = C.Brel (transBrel brel) (transLHExpr e1) (transLHExpr e2) 
+transProp (Brel brel e1 e2) = C.Brel (transBrel brel) (transLHExpr e1) (transLHExpr e2)
 transProp (And es) = C.And $ map transProp es
 transProp (LHApp f es) = C.PExpr $ C.App f $ map transLHExpr es
 transProp (LHVar x)    = C.PExpr $ C.Var x
 
-data Environment =  Env 
+data Environment =  Env
   { envName :: Id
   , envArgs :: M.Map Id Int
   , envIndVars :: M.Map Id Int
@@ -135,12 +133,12 @@ data Environment =  Env
 addInd :: Id -> Int -> Environment -> Environment
 addInd ind argPos env = env {envIndVars = M.insert ind argPos (envIndVars env)}
 
-askIds :: Reader Environment (M.Map Id Int) 
+askIds :: Reader Environment (M.Map Id Int)
 askIds = asks envArgs
 
 checkInductiveCall :: M.Map Id Int -> [(Expr, Int)] -> Maybe Arg
 checkInductiveCall _ [] = Nothing
-checkInductiveCall indVars allArgs@((Var arg,pos):args) = 
+checkInductiveCall indVars allArgs@((Var arg,pos):args) =
   case M.lookup arg indVars of
     Just x | x == pos -> Just (pos,arg)
     _                 -> checkInductiveCall indVars args
@@ -148,46 +146,52 @@ checkInductiveCall indVars (_:args) = checkInductiveCall indVars args
 
 transformTop :: Def -> [C.Tactic]
 transformTop def@(Def name args e) =
-  case ind of
-    Nothing       -> transBranch e
-    Just (arg, e') -> transIndDef (Def name args e') arg
-  where ind = runReader (transformInductive e) $ Env name (M.fromList $ zip args [0..]) M.empty
+    case runReader (transformInductive e) env of
+      Nothing       -> transBranch e
+      Just (arg, e') -> transIndDef (Def name args e') arg
+  where
+    env = Env name (M.fromList $ zip args [0..]) M.empty
 
 type Arg = (Int,Id)
 transformInductive :: Expr -> Reader Environment (Maybe (Arg,Expr))
 transformInductive (Let x e1 e2) = do
-  ind1 <- transformInductive e1
-  ind2 <- transformInductive e2
-  return $ case ind1 of
-              Nothing       -> fmap (Let x e1) <$> ind2
-              Just (ind, e) -> Just (ind, Let x e e2) 
+    ind1 <- transformInductive e1
+    ind2 <- transformInductive e2
+    return $ case ind1 of
+                Nothing       -> fmap (Let x e1) <$> ind2
+                Just (ind, e) -> Just (ind, Let x e e2)
 transformInductive (Case (Var matchId) ident branches) = do
-  Env{envName=name, envArgs=args} <- ask
-  let n = fromMaybe (error "Non-existent id.") (M.lookup matchId args) 
-  mInds <- forM branches $ \(Pat con args, e) ->
-              case args of
-                [] -> return Nothing
-                (x:_) -> local (addInd x n) (transformInductive e)
-  let modifyIndBranch = \ix -> B.second (\e -> modifyAt branches ix ((,e) . fst))
-                                        $ fromJust $ mInds!!ix
-  return $ fmap (Case (Var matchId) ident) . modifyIndBranch <$> findIndex isJust mInds
+    Env{envName=name, envArgs=args} <- ask
+    let n = fromMaybe (error "Non-existent id.") (M.lookup matchId args)
+    mInds <- forM branches $ \(Pat con args, e) ->
+                case args of
+                  []    -> return Nothing
+                  (x:_) -> local (addInd x n) (transformInductive e)
+    let
+      mIdx                = findIndex isJust mInds
+      (mIndArg, mIndExpr) = unzipMaybe $ fromJust . (mInds !!) <$> mIdx
+      mBranches           = modifyAt branches <$> mIdx <*>
+          pure (replaceExprWith (fromJust mIndExpr))
+    return $ (,) <$> mIndArg <*> (Case (Var matchId) ident <$> mBranches)
+  where
+    replaceExprWith :: Expr -> (Pat, Expr) -> (Pat,Expr)
+    replaceExprWith e' (pat,e) = (pat,e')
 transformInductive app@(App f args) = do
-  Env{envName=name, envIndVars=indVars} <- ask
-  indFromArgs <- mapM transformInductive args
-  let indFromApp = checkInductiveCall indVars (zip args [0..])
-  return $
-    if f == name then
-      fmap (\arg@(pos,_) -> (arg, App f (deleteAt args pos))) indFromApp
-    else
-      let modifyArg = \ix -> B.second (setAt args ix) $ fromJust $ indFromArgs!!ix
-      in  fmap (App f) . modifyArg <$> findIndex isJust indFromArgs
-
+    Env{envName=name, envIndVars=indVars} <- ask
+    indFromArgs <- mapM transformInductive args
+    let indFromApp = checkInductiveCall indVars (zip args [0..])
+    return $
+      if f == name then
+        fmap (\arg@(pos,_) -> (arg, App f (deleteAt args pos))) indFromApp
+      else
+        let modifyArg ix = B.second (setAt args ix) . fromJust $ indFromArgs!!ix
+        in  fmap (App f) . modifyArg <$> findIndex isJust indFromArgs
 transformInductive t = return Nothing
 
 transIndDef :: Def -> Arg -> [C.Tactic]
 transIndDef (Def name args (Case (Var ind) _ [(_,e1), (_,e2)])) (pos, var)
   | null nonIndArgs = induction : transBranch e1 ++ transBranch e2
-  | otherwise       = revert : induction : intros : transBranch e1 
+  | otherwise       = revert : induction : intros : transBranch e1
                         ++ intros : transBranch e2
   where
     revert = C.Revert nonIndArgs
