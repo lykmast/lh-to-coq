@@ -6,7 +6,6 @@ import qualified Coq as C
 
 import qualified Data.Map as M
 import Control.Monad.Reader
-import Debug.Trace
 import Data.List(findIndex)
 import Util
 import qualified Data.Bifunctor as B
@@ -139,15 +138,9 @@ addInd ind argPos env = env {envIndVars = M.insert ind argPos (envIndVars env)}
 askIds :: Reader Environment (M.Map Id Int) 
 askIds = asks envArgs
 
-logTrace :: Show a => String -> a -> b -> b 
-logTrace msg x = trace (msg ++ "\n{\n" ++ show x ++ "\n}\n")
-
--- getIndApp (Var f) (Var x) = ask >>= (== f) . envName
-
 checkInductiveCall :: M.Map Id Int -> [(Expr, Int)] -> Maybe Arg
 checkInductiveCall _ [] = Nothing
 checkInductiveCall indVars allArgs@((Var arg,pos):args) = 
-  trace ("checking inductive call with env:" ++ show indVars ++ "and args: " ++ show allArgs) $
   case M.lookup arg indVars of
     Just x | x == pos -> Just (pos,arg)
     _                 -> checkInductiveCall indVars args
@@ -182,12 +175,9 @@ transformInductive app@(App f args) = do
   Env{envName=name, envIndVars=indVars} <- ask
   indFromArgs <- mapM transformInductive args
   let indFromApp = checkInductiveCall indVars (zip args [0..])
-  
   return $
     if f == name then
-      case indFromApp of
-        Just arg@(pos,_) -> Just (arg, App f (deleteAt args pos))
-        Nothing -> trace "selfcall without induction??" Nothing
+      fmap (\arg@(pos,_) -> (arg, App f (deleteAt args pos))) indFromApp
     else
       let modifyArg = \ix -> B.second (setAt args ix) $ fromJust $ indFromArgs!!ix
       in  fmap (App f) . modifyArg <$> findIndex isJust indFromArgs
