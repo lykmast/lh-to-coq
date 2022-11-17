@@ -61,15 +61,6 @@ instance Show Prop where
 data Brel = Eq
 instance Show Brel where show Eq = "="
 
-data ProofBody = Tactic :> ProofBody | Tactic :| ProofBody | Single Tactic | Empty
-               deriving Show
-
--- data ProofBody = Tactic :> ProofBody | Tactic :| ProofBody | [ProofBody] :>> ProofBody | Empty 
-
-
-infixr 4 :>
-infixr 4 :|
-
 trivial = "smt_trivial"
 
 ple = "ple"

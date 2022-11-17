@@ -92,11 +92,6 @@ transType :: Type -> C.Expr
 transType (TVar tv) = C.Var tv
 transType (TDat con tys) = C.App con $ map transType tys
 
-transPB :: ProofBody -> C.ProofBody
-transPB (PCase id paths) = undefined
-transPB (PCall id e) = C.Single $ C.Rewrite (C.Var id) 
-
-
 transPat :: Pat -> C.Pat
 transPat (Pat con args) = C.Pat con args
 
