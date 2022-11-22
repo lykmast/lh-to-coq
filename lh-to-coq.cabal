@@ -15,6 +15,7 @@ library
       Coq
       CoreToLH
       LH
+      Preamble
       SpecToLH
       Util
       Paths_lh_to_coq

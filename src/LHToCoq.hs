@@ -7,14 +7,16 @@ import qualified Language.Haskell.Liquid.UX.CmdLine as LhLib (getOpts)
 import qualified Data.Map as M
 import qualified Data.Bifunctor as B
 
+
 import qualified CoreToLH as CLH
 import qualified LH
 import qualified SpecToLH as SLH
+import Preamble(preamble)
 import Util
 
 
 run :: [String] -> IO ()
-run args = do 
+run args = do
     (binds,specs) <- B.first (filter (not . isDollarBind)) <$> getBindsAndSpecs args
     let
       specMap = SLH.transSig <$> M.fromList specs
@@ -27,15 +29,6 @@ run args = do
     mapM_ print coqDefs
     mapM_ print mCoqProofs
 
-preamble :: [String]
-preamble = natDecl : ltacs
-  where
-    ltacs = [ple, smtTrivial, smtApp]
-    natDecl    = "Inductive PNat:Set := Z : PNat | S: PNat -> PNat."
-    ple        = "Ltac ple := simpl."
-    smtTrivial = "Ltac smt_trivial := try intuition discriminate."
-    smtApp     = "Ltac smt_app th := first [ rewrite th | ple; rewrite th ]."
-
 type SpecPair = (Id, LhLib.SpecType)
 
 -- Get the stuff that we need from LH parser, namely: Binds and Specs.
@@ -46,7 +39,7 @@ getBindsAndSpecs args = do
     (LhLib.TargetInfo src specs:_, _)
       <- LhLib.getTargetInfos Nothing cfg (LhLib.files cfg)
     return (LhLib.giCbs src, getSpecPairs specs)
-  where 
+  where
     getSpecPairs :: LhLib.TargetSpec -> [SpecPair]
     getSpecPairs = map (B.bimap showStripped LhLib.val) . LhLib.gsTySigs . LhLib.gsSig
 
