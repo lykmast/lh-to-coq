@@ -1,17 +1,17 @@
 # Taken from https://github.com/erikmd/docker-coq-github-action-demo
-name: Test Coq Files
+name: Test Examples 
 
 on:
   push:
     branches:
-      - main
+      - '**'
   pull_request:
     branches:
       - '**'
 
 jobs:
   testfiles:
-    runs-on: ubuntu-latest  # container actions require GNU/Linux
+    runs-on: ubuntu-latest  
     strategy:
       matrix:
         coq_version:
@@ -21,8 +21,30 @@ jobs:
       fail-fast: false  # don't stop jobs if one fails
     steps:
       - uses: actions/checkout@v3
+      - uses: freckle/stack-cache-action@main
+      - uses: actions/setup-haskell@v1
+        with:
+          ghc-version: '8.10.3'
+          enable-stack: true
+          stack-version: 'latest'
+
+      - name: Install Z3
+        run: |
+          wget https://github.com/Z3Prover/z3/releases/download/z3-4.9.1/z3-4.9.1-x64-glibc-2.31.zip
+          unzip z3-4.9.1-x64-glibc-2.31.zip
+          rm -f z3-4.9.1-x64-glibc-2.31.zip
+          sudo cp z3-4.9.1-x64-glibc-2.31/bin/libz3.a /usr/local/lib
+          sudo cp z3-4.9.1-x64-glibc-2.31/bin/z3 /usr/local/bin
+          sudo cp z3-4.9.1-x64-glibc-2.31/include/* /usr/local/include
+          rm -rf z3-4.9.1-x64-glibc-2.31
+          z3 --version
+      - name: Build
+        run: stack setup && stack install      
+      - name: Test
+        run: bash test.sh     
       - uses: coq-community/docker-coq-action@v1 
         with:
-          opam_file: 'folder/coq-proj.opam'
+          opam_file: 'lh-to-coq.opam'
           coq_version: ${{ matrix.coq_version }}
           ocaml_version: ${{ matrix.ocaml_version }}
+
