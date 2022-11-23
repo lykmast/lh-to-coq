@@ -18,6 +18,7 @@ library
       CoreToLH
       LH
       Preamble
+      Simplify
       SpecToLH
       Util
       Paths_lh_to_coq
