@@ -1,6 +1,6 @@
 # Taken from https://github.com/erikmd/docker-coq-github-action-demo
 # a few tests, not intended for demo purposes
-name: misc-test
+name: Test Coq Files
 
 on:
   push:

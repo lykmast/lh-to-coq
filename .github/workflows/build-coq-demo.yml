@@ -1,7 +1,7 @@
 # Taken from https://github.com/erikmd/docker-coq-github-action-demo
 
 # This is a workflow example relying on docker-coq-action.
-name: Docker CI
+name: Build Coq 
 
 # Controls when the action will run:
 # https://help.github.com/en/actions/configuring-and-managing-workflows/configuring-a-workflow#filtering-for-specific-branches-tags-and-paths
@@ -27,19 +27,10 @@ jobs:
     # the OS must be GNU/Linux to be able to use the docker-coq-action.
     runs-on: ubuntu-latest
     strategy:
-      matrix:
-        # Browse URL: https://github.com/coq-community/docker-coq/wiki#supported-tags
-        # to get the list of supported (coq, ocaml) versions in coqorg/coq.
-        coq_version:
-          - '8.15'
-          - 'dev'
-        ocaml_version:
-          - '4.07-flambda'
-      # at most 20 concurrent jobs per free account:
-      # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#usage-limits
-      max-parallel: 4
-      # don't cancel all in-progress jobs if one matrix job fails:
-      fail-fast: false
+        image:
+          - 'mathcomp/mathcomp-dev:coq-dev'
+          - 'mathcomp/mathcomp:latest-coq-8.15'
+        fail-fast: false
 
     # Steps represent a sequence of tasks that will be executed as part of the job.
     steps:
