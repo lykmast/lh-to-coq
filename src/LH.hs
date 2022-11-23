@@ -104,7 +104,10 @@ transProof (App f es) = [C.Apply (C.App f (map transExpr es))]
 transProof (QMark e1 e2) = concatMap transProof [e1,e2]
 transProof Unit = [C.Trivial]
 transProof (Let id e1 e2) = [C.LetTac id (head $ transProof e1) (head $ transProof e2)]
-transProof (Case e _ bs)   = C.Destruct (transExpr e) : concatMap (\(_,e) -> transProof e) bs
+transProof (Case e _ bs) =
+    C.Destruct (transExpr e) (map patArgs pats): concatMap transProof es
+  where
+    (pats, es) = unzip bs
 
 
 

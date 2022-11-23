@@ -72,7 +72,7 @@ solve = "smt_solve"
 data Tactic = Trivial
             | Ple
             | Apply Expr
-            | Destruct Expr
+            | Destruct Expr [[Id]]
             | Induction {indArg :: Id, indVar :: Id, indHyp :: Id}
             | LetTac Id Tactic Tactic
             | Intros [Id]
@@ -90,7 +90,7 @@ instance Show Tactic where
   show (Apply e) = apply ++ " " ++ showAppArg e
   show (Solve e) = solve ++ " " ++ showAppArg e
   -- TODO generalize destruct
-  show (Destruct (Var n)) = "destruct " ++ n ++ " as [| " ++ n ++ " ]"
+  show (Destruct (Var n) bs) = "destruct " ++ n ++ " as [" ++ intercalate " | " (map unwords bs) ++ " ]"
   show (Induction arg var hyp) = "induction " ++ arg ++ " as [| " ++ unwords [var,hyp] ++ " ]"
   show (LetTac id t1 t2) = "let " ++ filterWeird id ++ " := " ++ addParens (show t1) ++ " in " ++ show t2
   show (Intros ids) = "intros " ++ unwords ids
