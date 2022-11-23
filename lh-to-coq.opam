@@ -1,0 +1,23 @@
+opam-version: "2.0"
+compiler: [
+  "base-bigarray.base"
+  "base-threads.base"
+  "base-unix.base"
+  "ocaml.4.10.2"
+  "ocaml-config.1"
+  "ocaml-system.4.10.2"
+]
+roots: ["coq.8.13.1" "ocaml-system.4.10.2"]
+installed: [
+  "base-bigarray.base"
+  "base-threads.base"
+  "base-unix.base"
+  "conf-findutils.1"
+  "conf-gmp.3"
+  "coq.8.13.1"
+  "num.1.4"
+  "ocaml.4.10.2"
+  "ocaml-config.1"
+  "ocamlfind.1.9.1"
+  "zarith.1.12"
+]
