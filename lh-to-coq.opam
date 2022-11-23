@@ -1,23 +1,20 @@
 opam-version: "2.0"
-compiler: [
-  "base-bigarray.base"
-  "base-threads.base"
-  "base-unix.base"
-  "ocaml.4.10.2"
-  "ocaml-config.1"
-  "ocaml-system.4.10.2"
+
+
+build: [
+  ["sh" "-c" "coq_makefile -f _CoqProject -o Makefile"]
+  [make "-j%{jobs}%"]
 ]
-roots: ["coq.8.13.1" "ocaml-system.4.10.2"]
-installed: [
-  "base-bigarray.base"
-  "base-threads.base"
-  "base-unix.base"
-  "conf-findutils.1"
-  "conf-gmp.3"
-  "coq.8.13.1"
-  "num.1.4"
-  "ocaml.4.10.2"
-  "ocaml-config.1"
-  "ocamlfind.1.9.1"
-  "zarith.1.12"
+install: [make "install"]
+
+run-test: [make "test"]
+
+depends: [
+  "ocaml" {>= "4.05.0"}
+  "coq" {(>= "8.6") | (= "dev")}
 ]
+
+synopsis: "Blah blah"
+tags: []
+maintainer : ["Niki Vazou"]
+authors: ["Niki Vazou"]
