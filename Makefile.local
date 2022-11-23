@@ -1,0 +1,4 @@
+test:: out/Simple.v
+	for f in $^ ; do \
+	  $(COQC) $(COQDEBUG) $(COQFLAGS) $(COQLIBS) $$f ; \
+	done
