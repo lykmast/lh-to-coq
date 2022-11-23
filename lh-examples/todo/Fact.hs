@@ -66,17 +66,17 @@ mul_Z_r Z = ()
 mul_Z_r (S n) = mul_Z_r n
 
 -- | Multiply with right successor.
-{-@ mul_suc_r :: m:PNat -> n:PNat -> {mul n (S m) = add n (mul n m)} @-}
-mul_suc_r :: PNat -> PNat -> Proof
-mul_suc_r m Z     = ()
-mul_suc_r m (S n) = mul_suc_r m n
+{-@ mul_suc_r :: n:PNat -> m:PNat -> {mul n (S m) = add n (mul n m)} @-}
+mul_suc_r :: PNat -> PNat -> ()
+mul_suc_r Z m     = ()
+mul_suc_r (S n) m = mul_suc_r n m
                   ? add_assoc m n (mul n m)
                   ? add_comm m n
                   ? add_assoc n m (mul n m)
 
 -- * Commutativity of multiplication.
 {-@ mul_comm :: n:PNat -> m:PNat -> {mul n m = mul m n} @-}
-mul_comm :: PNat -> PNat -> Proof
+mul_comm :: PNat -> PNat -> ()
 mul_comm Z m = mul_Z_r m
 mul_comm (S n) m = mul_comm n m ? mul_suc_r m n
 
@@ -144,9 +144,11 @@ le_n_factpn (S n) = le_one_mul (factP n) (S n) (le_one_factp n)
 ---------------------- Boolean <= ----------------------
 
 {-@ reflect leb @-}
-leb Z _ = True
-leb _ Z = False
-leb (S n) (S m) = leb n m
+leb n m = case n of
+    Z -> True
+    S n -> case m of
+        Z -> False
+        S m -> leb n m
 
 {-@ leb_refl :: n:PNat -> {leb n n} @-}
 leb_refl Z = ()
