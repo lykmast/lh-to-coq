@@ -1,5 +1,4 @@
 # Taken from https://github.com/erikmd/docker-coq-github-action-demo
-# a few tests, not intended for demo purposes
 name: Test Coq Files
 
 on:
@@ -11,77 +10,19 @@ on:
       - '**'
 
 jobs:
-  uid-test:
-    runs-on: ubuntu-latest
+  testfiles:
+    runs-on: ubuntu-latest  # container actions require GNU/Linux
+    strategy:
+      matrix:
+        coq_version:
+          - '8.16'
+          - dev
+        ocaml_version: ['default']
+      fail-fast: false  # don't stop jobs if one fails
     steps:
-      - uses: actions/checkout@v2
-      - run: id
-      - uses: coq-community/docker-coq-action@v1
+      - uses: actions/checkout@v3
+      - uses: coq-community/docker-coq-action@v1 
         with:
-          opam_file: './coq-demo.opam'
-          coq_version: 'latest'
-          ocaml_version: 'latest'
-          custom_script: |
-            # small test, not intended for demo purposes
-            startGroup Test UID+GID
-              id
-              pwd
-              ls -hal
-              stat -c "UID=%u,GID=%g %n" $WORKDIR/$PACKAGE.opam
-            endGroup
-            startGroup Print opam config
-              opam config list; opam repo list; opam list
-            endGroup
-
-  leak-test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: 'Define and export env vars'
-        run: |
-          # 1. Example of a repository secret
-
-          echo ${{ secrets.SOME_REPO_SEC }}  # automatically hidden
-
-          # 2. Example of a locally-created secret
-
-          SOME_LOCAL_SEC="$RANDOM"
-          # echo $SOME_LOCAL_SEC # TO REMOVE! (just to say it's not yet hidden)
-          echo "::add-mask::$SOME_LOCAL_SEC"
-          # See https://docs.github.com/en/actions/reference/workflow-commands-for-github-actions#masking-a-value-in-log
-          echo "$SOME_LOCAL_SEC"  # would be hidden
-
-          printf "%s\n" "SOME_LOCAL_SEC=$(printf "%q" "$SOME_LOCAL_SEC")" >> $GITHUB_ENV
-          # See https://docs.github.com/en/actions/reference/workflow-commands-for-github-actions#setting-an-environment-variable
-
-          # 3. Example of a locally-created local variable
-
-          SOME_LOCAL_VAR='ok'
-          printf "%s\n" "SOME_LOCAL_VAR=$(printf "%q" "$SOME_LOCAL_VAR")" >> $GITHUB_ENV
-
-      - name: 'Run coq-community/docker-coq-action@v1 with debian:10'
-        uses: coq-community/docker-coq-action@v1
-        env:
-          SOME_OTHER_VAR: 'okok'
-          SOME_OTHER_SEC: ${{ secrets.SOME_REPO_SEC }}
-        with:
-          export: 'SOME_LOCAL_VAR SOME_LOCAL_SEC SOME_OTHER_VAR SOME_OTHER_SEC'
-          custom_image: 'debian:10'
-          custom_script: |
-            : A. This should print ok twice, and okok twice
-            echo "$SOME_LOCAL_VAR"
-            echo "$SOME_OTHER_VAR"
-
-            : B. This should print '***' thrice
-            echo $SOME_LOCAL_SEC
-            echo $SOME_OTHER_SEC
-            echo ${{ secrets.SOME_REPO_SEC }}
-
-            # Note also that one can further harden docker-coq-action's logging
-            # by disabling temporarily the trace of commands
-
-            { set +x; } 2>/dev/null
-            
-            echo 'C. This should print ok only once'
-            echo "$SOME_LOCAL_VAR"
-            
-            set -x
+          opam_file: 'folder/coq-proj.opam'
+          coq_version: ${{ matrix.coq_version }}
+          ocaml_version: ${{ matrix.ocaml_version }}
