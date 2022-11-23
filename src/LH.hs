@@ -20,12 +20,6 @@ data Expr = App Id [Expr]
 
 data Type = TVar Id | TDat Id [Type] deriving Show
 
-data ProofBody = PCase Id [(Pat, ProofBody)]
-               | PCall Id [Expr]
-               | IndCase Id [(Pat,ProofBody)]
-               | IndCall Id [Expr]
-               | PUnit
-
 isProof :: Signature -> Bool
 isProof = (== "()") . typeName . lhArgType . sigRes
   where
