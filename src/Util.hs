@@ -53,3 +53,15 @@ updateLast f (a : as) = loop a as
   where
   loop a []       = [f a]
   loop a (b : bs) = a : loop b bs
+
+mcons :: Maybe a -> [a] -> [a]
+mcons mx xs = maybe xs (:xs) mx
+
+(?:) = mcons
+infixr 5 ?:
+
+toMaybe :: Bool -> a -> Maybe a
+toMaybe b = if b then Just else const Nothing
+
+notNull :: [a] -> Bool
+notNull = not . null

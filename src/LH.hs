@@ -72,15 +72,19 @@ rename name = ask <&> (fromMaybe name . M.lookup name)
 
 transLH :: Proof -> C.Proof
 transLH (Proof def@(Def name dArgs body) sig) =
-  C.Proof name (concatMap transLHArg sigArgs) (transResLHArg res) (transformTop def)
-  where Signature sigArgs res = renameSigArgs dArgs sig
+    C.Proof name (args ++ refts) (transResLHArg res) (transformTop def reftIds)
+  where
+    Signature sigArgs res = renameSigArgs dArgs sig
+    (args, refts) = B.second catMaybes . unzip $ map transLHArg sigArgs
+    (reftIds,_)   = unzip refts
 
-transLHArg :: LHArg -> [(Id, C.Type)]
+type CoqArg = (Id, C.Type)
+transLHArg :: LHArg -> (CoqArg, Maybe CoqArg)
 transLHArg (LHArg name ty reft) =
-  (name, C.TExpr $ transType ty):
-  case reft of
-    LHVar "True" -> []
-    _            -> [(name ++ "_reft", C.TProp $ transProp reft)]
+  ((name, C.TExpr $ transType ty),
+    case reft of
+      LHVar "True" -> Nothing
+      _            -> Just (name ++ "_reft", C.TProp $ transProp reft))
 
 transResLHArg :: LHArg -> C.Prop
 transResLHArg (LHArg _ _ reft) = transProp reft
@@ -144,11 +148,11 @@ checkInductiveCall indVars allArgs@((Var arg,pos):args) =
     _                 -> checkInductiveCall indVars args
 checkInductiveCall indVars (_:args) = checkInductiveCall indVars args
 
-transformTop :: Def -> [C.Tactic]
-transformTop def@(Def name args e) =
+transformTop :: Def -> [Id] -> [C.Tactic]
+transformTop def@(Def name args e) refts =
     case runReader (transformInductive e) env of
-      Nothing       -> transBranch e
-      Just (arg, e') -> transIndDef (Def name args e') arg
+      Nothing        -> transBranch e
+      Just (arg, e') -> transIndDef (Def name args e') arg refts
   where
     env = Env name (M.fromList $ zip args [0..]) M.empty
 
@@ -188,17 +192,19 @@ transformInductive app@(App f args) = do
         in  fmap (App f) . modifyArg <$> findIndex isJust indFromArgs
 transformInductive t = return Nothing
 
-transIndDef :: Def -> Arg -> [C.Tactic]
-transIndDef (Def name args (Case (Var ind) _ [(_,e1), (_,e2)])) (pos, var)
-  | null nonIndArgs = induction : transBranch e1 ++ transBranch e2
-  | otherwise       = revert : induction : intros : transBranch e1
-                        ++ intros : transBranch e2
+transIndDef :: Def -> Arg -> [Id] -> [C.Tactic]
+transIndDef (Def name args (Case (Var ind) _ [(_,e1), (_,e2)])) (pos, var) refts =
+    revertRefts ?: revertArgs ?: induction : intros ?: transBranch e1
+                        ++ intros ?: transBranch e2
   where
-    revert = C.Revert nonIndArgs
-    intros = C.Intros nonIndArgs
+    notNullApply :: [a] -> b -> [a] -> Maybe b
+    notNullApply f args = toMaybe (notNull args) (f args)
+    [intros, revertRefts, revertArgs] =
+        zipWith notNullApply [C.Intros, C.Revert, C.Revert] [allArgs, refts, nonIndArgs]
+    allArgs = nonIndArgs ++ refts
     nonIndArgs = deleteAt args pos
     induction = C.Induction (args !! pos) var name
-transIndDef def _ = error $ "unhandled proof case of " ++ show def
+transIndDef def _ _ = error $ "unhandled proof case of " ++ show def
 
 transBranch :: Expr -> [C.Tactic]
 transBranch = updateLast C.toSolve . transProof
