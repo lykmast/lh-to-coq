@@ -1,10 +1,10 @@
 # Taken from https://github.com/erikmd/docker-coq-github-action-demo
-name: Test Coq Files
+name: Test Examples 
 
 on:
   push:
     branches:
-      - test
+      - '**'
   pull_request:
     branches:
       - '**'
