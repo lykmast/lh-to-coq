@@ -9,5 +9,5 @@ Inductive day : Type :=
   
 
 Example test_next_weekday:
-  tuesday = tuesday.
+  tuesday = sunday.
 Proof. simpl. reflexivity. Qed.
