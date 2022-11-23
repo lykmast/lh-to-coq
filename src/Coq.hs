@@ -18,7 +18,7 @@ instance Show Def where
   show (Def name args body) =
     "Fixpoint " ++ name ++ " " ++ unwords args ++ " :=\n"
     ++ "  " ++ show body ++ ".\n"
-  
+
 data Pat = Pat {patCon :: Id, patArgs :: [Id]}
 
 instance Show Pat where
@@ -65,26 +65,37 @@ trivial = "smt_trivial"
 
 ple = "ple"
 
-rewrite = "smt_app"
+apply = "smt_app"
+
+solve = "smt_solve"
 
 data Tactic = Trivial
             | Ple
-            | Rewrite Expr
+            | Apply Expr
             | Destruct Expr
             | Induction {indArg :: Id, indVar :: Id, indHyp :: Id}
             | LetTac Id Tactic Tactic
             | Intros [Id]
             | Revert [Id]
+            | Now Tactic
+            | Solve Expr
+
+toSolve :: Tactic -> Tactic
+toSolve (Apply e) = Solve e
+toSolve t = Now t
+
 instance Show Tactic where
   show Trivial = trivial
   show Ple = ple
-  show (Rewrite e) = rewrite ++ " " ++ showAppArg e
+  show (Apply e) = apply ++ " " ++ showAppArg e
+  show (Solve e) = solve ++ " " ++ showAppArg e
   -- TODO generalize destruct
   show (Destruct (Var n)) = "destruct " ++ n ++ " as [| " ++ n ++ " ]"
   show (Induction arg var hyp) = "induction " ++ arg ++ " as [| " ++ unwords [var,hyp] ++ " ]"
   show (LetTac id t1 t2) = "let " ++ filterWeird id ++ " := " ++ addParens (show t1) ++ " in " ++ show t2
   show (Intros ids) = "intros " ++ unwords ids
   show (Revert ids) = "revert " ++ unwords ids
+  show (Now t) = "now " ++ show t
 
 filterWeird :: String -> String
 filterWeird = filter (not . flip elem "$#")

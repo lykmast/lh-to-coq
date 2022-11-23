@@ -45,3 +45,11 @@ deleteAt xs n = take n xs ++ drop (n+1) xs
 
 unzipMaybe :: Maybe (a,b) -> (Maybe a, Maybe b)
 unzipMaybe = maybe (Nothing,Nothing) (B.bimap Just Just)
+
+updateLast :: (a -> a) -> [a] -> [a]
+updateLast _ [] = []
+updateLast f (a : as) = loop a as
+  -- Using a helper function to minimize the pattern matching.
+  where
+  loop a []       = [f a]
+  loop a (b : bs) = a : loop b bs

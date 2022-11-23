@@ -101,10 +101,10 @@ transExpr Unit = C.Var "()"
 transExpr (QMark e1 e2) = C.App "(?)" $ map transExpr [e1,e2]
 
 transProof :: Expr -> [C.Tactic]
-transProof (Var x) = [C.Rewrite (C.Var x)]
-transProof (App f es) = [C.Rewrite (C.App f (map transExpr es))]
+transProof (Var x) = [C.Apply (C.Var x)]
+transProof (App f es) = [C.Apply (C.App f (map transExpr es))]
 transProof (QMark e1 e2) = concatMap transProof [e1,e2]
-transProof Unit = []
+transProof Unit = [C.Trivial]
 transProof (Let id e1 e2) = [C.LetTac id (head $ transProof e1) (head $ transProof e2)]
 transProof (Case e _ bs)   = C.Destruct (transExpr e) : concatMap (\(_,e) -> transProof e) bs
 
@@ -201,7 +201,7 @@ transIndDef (Def name args (Case (Var ind) _ [(_,e1), (_,e2)])) (pos, var)
 transIndDef def _ = error $ "unhandled proof case of " ++ show def
 
 transBranch :: Expr -> [C.Tactic]
-transBranch = (++ [C.Trivial]) . transProof
+transBranch = updateLast C.toSolve . transProof
 
 
 transDef :: Def -> C.Def
