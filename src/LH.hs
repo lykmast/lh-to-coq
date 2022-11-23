@@ -197,7 +197,7 @@ transIndDef (Def name args (Case (Var ind) _ [(_,e1), (_,e2)])) (pos, var) refts
     revertRefts ?: revertArgs ?: induction : intros ?: transBranch e1
                         ++ intros ?: transBranch e2
   where
-    notNullApply :: [a] -> b -> [a] -> Maybe b
+    notNullApply :: ([a] -> b) -> [a] -> Maybe b
     notNullApply f args = toMaybe (notNull args) (f args)
     [intros, revertRefts, revertArgs] =
         zipWith notNullApply [C.Intros, C.Revert, C.Revert] [allArgs, refts, nonIndArgs]
