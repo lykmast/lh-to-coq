@@ -2,6 +2,8 @@
 
 Translate Liquid Haskell to Coq.
 
+[All `lh-examples/*.hs` files have valid Coq translations](https://github.com/lykmast/lh-to-coq/actions/workflows/coq-test/badge.svg)
+
 ### Status
 Print Coq definitions and proofs for corresponding Haskell definitions and LH proofs.
 
