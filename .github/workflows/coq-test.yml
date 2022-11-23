@@ -41,7 +41,7 @@ jobs:
       - name: Build
         run: stack setup && stack install      
       - name: Test
-        run: stack test     
+        run: bash test.sh     
       - uses: coq-community/docker-coq-action@v1 
         with:
           opam_file: 'lh-to-coq.opam'
