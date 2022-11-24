@@ -65,3 +65,12 @@ toMaybe b = if b then Just else const Nothing
 
 notNull :: [a] -> Bool
 notNull = not . null
+
+mapSnd :: (a -> b) -> [(c, a)] -> [(c,b)]
+mapSnd f xys = map (\(x,y) -> (x, f y)) xys  
+
+mapMSnd :: Monad m => (a -> m b) -> [(c, a)] -> m [(c,b)]
+mapMSnd _ [] = return [] 
+mapMSnd f ((x,y):xys) = do y'   <- f y 
+                           xys' <- mapMSnd f xys  
+                           return ((x,y'):xys')

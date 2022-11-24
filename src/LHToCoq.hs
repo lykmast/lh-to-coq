@@ -11,7 +11,8 @@ import qualified Data.Bifunctor as B
 import qualified CoreToLH as CLH
 import qualified LH
 import qualified SpecToLH as SLH
-import Preamble(preamble)
+import           Simplify (simplify)
+import Preamble (preamble)
 import Util
 
 
@@ -20,7 +21,7 @@ run args = do
     (binds,specs) <- B.first (filter (not . isDollarBind)) <$> getBindsAndSpecs args
     let
       specMap = SLH.transSig <$> M.fromList specs
-      lhDefs = map CLH.transBind binds
+      lhDefs = map CLH.transBind (simplify <$> binds)
       (defs, proofs) = splitDefsAndProofs $ pairLHDefsWithSigs lhDefs specMap
       coqDefs    = map LH.transDef defs
       mCoqProofs = map LH.transLH proofs
