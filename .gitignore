@@ -29,3 +29,5 @@ cabal.project.local~
 *.vo
 *.vok
 *.vos
+out/*.v
+_CoqProject
