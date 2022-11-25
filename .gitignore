@@ -24,3 +24,8 @@ cabal.project.local~
 *.swp
 .liquid/
 .ghcid
+# Coq stuff
+*.glob
+*.vo
+*.vok
+*.vos
