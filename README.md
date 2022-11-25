@@ -5,11 +5,13 @@ Translate Liquid Haskell to Coq.
 All `lh-examples/*.hs` files have valid Coq translations: ![Status:](https://github.com/lykmast/lh-to-coq/actions/workflows/coq-test.yml/badge.svg)
 
 ### Status
+
 Print Coq definitions and proofs for corresponding Haskell definitions and LH proofs.
+[Simple.hs](lh-examples/Simple.hs) and [Fact.hs](lh-examples/Fact.hs) are succesfully translated.
 
-[Simple.hs](lh-examples/Simple.hs) is succesfully translated. In [Fact.hs](lh-examples/Fact.hs) some work is needed to translate refined arguments and boolean predicates such as `leb` 
+Cases covered are (possibly) inductive proofs on peano natural numbers.
 
-### Run example
-```
-stack run -- "lh-examples/Simple.hs" 
-```
+### Running examples
+
+Examples can be compiled to Coq by running [test.sh](test.sh), which will create `.v` files in [out](out).
+To typecheck the `.v` files with Coq, run `coqc file.v` (or open the file in an interactive Coq environment).
