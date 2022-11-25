@@ -161,7 +161,7 @@ leb_add_l (S n) m = leb_add_l n m
 
 {-@ leb_one_mul :: {n:PNat| leb (S Z) n} -> m:PNat -> {leb m (mul m n)} @-}
 leb_one_mul :: PNat -> PNat -> Proof
-leb_one_mul (S n) m = leb_add_l m (mul n m) ? mul_comm m (S n)
+leb_one_mul (S n) m =  mul_comm m (S n) ? leb_add_l m (mul n m)
 
 {-@ leb_trans :: n:PNat -> {m:_| leb n m} -> {p:_|leb m p} -> {leb n p} @-}
 leb_trans :: PNat -> PNat -> PNat -> Proof
