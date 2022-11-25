@@ -100,7 +100,13 @@ transExpr (QMark e1 e2) = C.App "(?)" $ map transExpr [e1,e2]
 
 transProof :: Expr -> [C.Tactic]
 transProof (Var x) = [C.Apply (C.Var x)]
-transProof (App f es) = [C.Apply (C.App f (map transExpr es))]
+transProof (App f es) = C.Apply (C.App f (map transExpr es')): concatMap transProof ps
+    where
+      (es', ps) = B.second catMaybes . unzip $ map getQMark es
+      getQMark :: Expr -> (Expr, Maybe Expr)
+      getQMark (QMark e1 e2) = (e1, Just e2)
+      getQMark e             = (e,Nothing)
+
 transProof (QMark e1 e2) = concatMap transProof [e1,e2]
 transProof Unit = [C.Trivial]
 transProof (Let id e1 e2) = [C.LetTac id (head $ transProof e1) (head $ transProof e2)]
@@ -108,7 +114,6 @@ transProof (Case e _ bs) =
     C.Destruct (transExpr e) (map patArgs pats): concatMap transProof es
   where
     (pats, es) = unzip bs
-
 
 
 transBrel :: Brel -> C.Brel
