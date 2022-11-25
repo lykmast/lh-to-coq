@@ -72,8 +72,8 @@ solve = "smt_solve"
 data Tactic = Trivial
             | Ple
             | Apply Expr
-            | Destruct Expr [[Id]]
-            | Induction {indArg :: Id, indVar :: Id, indHyp :: Id}
+            | Destruct {destrExpr :: Expr, destrBinds :: [[Id]], destrBranches :: [[Tactic]]}
+            | Induction {indArg :: Id, indVar :: Id, indHyp :: Id, indBranches :: [[Tactic]]}
             | LetTac Id Tactic Tactic
             | Intros [Id]
             | Revert [Id]
@@ -82,6 +82,8 @@ data Tactic = Trivial
 
 toSolve :: Tactic -> Tactic
 toSolve (Apply e) = Solve e
+toSolve d@Destruct{} = d{destrBranches = map (updateLast toSolve) (destrBranches d)}
+toSolve i@Induction{} = i{indBranches  = map (updateLast toSolve) (destrBranches i)}
 toSolve t = Now t
 
 instance Show Tactic where
@@ -90,12 +92,20 @@ instance Show Tactic where
   show (Apply e) = apply ++ " " ++ showAppArg e
   show (Solve e) = solve ++ " " ++ showAppArg e
   -- TODO generalize destruct
-  show (Destruct (Var n) bs) = "destruct " ++ n ++ " as [" ++ intercalate " | " (map unwords bs) ++ " ]"
-  show (Induction arg var hyp) = "induction " ++ arg ++ " as [| " ++ unwords [var,hyp] ++ " ]"
+  show (Destruct (Var n) binds branches) =
+      "destruct " ++ n ++ " as [" ++ intercalate " | " (map unwords binds) ++ " ]. "
+      ++ showBranches branches
+  show (Induction arg var hyp branches) =
+      "induction " ++ arg ++ " as [| " ++ unwords [var,hyp] ++ " ]. "
+      ++ showBranches branches
   show (LetTac id t1 t2) = "let " ++ filterWeird id ++ " := " ++ addParens (show t1) ++ " in " ++ show t2
   show (Intros ids) = "intros " ++ unwords ids
   show (Revert ids) = "revert " ++ unwords ids
   show (Now t) = "now " ++ show t
+
+showBranches :: [[Tactic]] -> String
+showBranches = intercalate ". " . map showBranch
+  where showBranch   = intercalate "; " . map show
 
 filterWeird :: String -> String
 filterWeird = filter (not . flip elem "$#")

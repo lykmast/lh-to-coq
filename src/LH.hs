@@ -111,7 +111,7 @@ transProof (QMark e1 e2) = concatMap transProof [e1,e2]
 transProof Unit = [C.Trivial]
 transProof (Let id e1 e2) = [C.LetTac id (head $ transProof e1) (head $ transProof e2)]
 transProof (Case e _ bs) =
-    C.Destruct (transExpr e) (map patArgs pats): concatMap transProof es
+    [C.Destruct (transExpr e) (map patArgs pats) (map transProof es)]
   where
     (pats, es) = unzip bs
 
@@ -203,8 +203,7 @@ transformInductive _ = return Nothing
 
 transIndDef :: Def -> Arg -> [Id] -> [C.Tactic]
 transIndDef (Def name args (Case (Var ind) _ [(_,e1), (_,e2)])) (pos, var) refts =
-    revertRefts ?: revertArgs ?: induction : intros ?: transBranch e1
-                        ++ intros ?: transBranch e2
+    revertRefts ?: revertArgs ?: [induction [intros ?: transBranch e1, intros ?: transBranch e2]]
   where
     notNullApply :: ([a] -> b) -> [a] -> Maybe b
     notNullApply f args = toMaybe (notNull args) (f args)
