@@ -16,7 +16,7 @@ transBind  (Rec ((b,e): _)) =
 
 -- Expressions.
 trans :: Show b => Expr b -> LH.Expr
-trans (Var id)  | name == "()" = LH.Unit 
+trans (Var id)  | name == "()" = LH.Unit
                 | otherwise = LH.Var name
                 where name = showStripped id
 trans app@App{}

@@ -1,4 +1,3 @@
-{-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE FlexibleInstances    #-}
 {-# LANGUAGE FlexibleContexts     #-}
 {-# LANGUAGE TupleSections        #-}
@@ -75,7 +74,7 @@ instance Subable CoreExpr where
   subst su (Lam x e)         = Lam x (subst su' e)
     where su' = filter ((/= x) . fst) su
   subst su (Let b e)         = Let (subst su b) (subst su' e)
-    where su' = filter ((`notElem` (binds b)) . fst) su
+    where su' = filter ((`notElem` binds b) . fst) su
   subst su (Case e x t alts) = Case (subst su e) x t (subst su' alts)
     where su' = filter ((/= x) . fst) su
   subst su (Cast e c)        = Cast (subst su e) c
