@@ -192,7 +192,14 @@ transformInductive app@(App f args) = do
       else
         let modifyArg ix = B.second (setAt args ix) . fromJust $ indFromArgs!!ix
         in  fmap (App f) . modifyArg <$> findIndex isJust indFromArgs
-transformInductive t = return Nothing
+transformInductive (QMark e1 e2) = do
+    mInd1 <- transformInductive e1
+    case mInd1 of
+      Just (arg, e1') -> return $ Just (arg, QMark e1' e2)
+      Nothing -> do
+        mInd2 <- transformInductive e2
+        return $ (\ (arg, e2') -> Just (arg, QMark e1 e2')) =<< mInd2
+transformInductive _ = return Nothing
 
 transIndDef :: Def -> Arg -> [Id] -> [C.Tactic]
 transIndDef (Def name args (Case (Var ind) _ [(_,e1), (_,e2)])) (pos, var) refts =
