@@ -18,7 +18,7 @@ import Util
 
 run :: [String] -> IO ()
 run args = do
-    (binds,specs) <- B.first (filter (not . isDollarBind)) <$> getBindsAndSpecs args
+    (binds,specs) <- B.first (filter (not . isIgnoredBind)) <$> getBindsAndSpecs args
     let
       specMap = SLH.transSig <$> M.fromList specs
       lhDefs = map CLH.transBind (simplify <$> binds)
@@ -60,6 +60,12 @@ splitDefsAndProofs pairs = (defs, proofs)
     defs   = map fst defsWithNoSig ++ map fst noProofDefs
     proofs = map (uncurry LH.Proof) proofDefs
 
-isDollarBind :: Show b => Bind b -> Bool
-isDollarBind (NonRec b _)    = head (showStripped b) == '$'
-isDollarBind (Rec ((b,_):_)) = head (showStripped b) == '$'
+isIgnoredBind :: Show b => Bind b -> Bool
+isIgnoredBind bind = name `startsWith` '$' || name == "?"
+  where
+    name = showStripped $
+      case bind of
+        NonRec b _    -> b
+        Rec ((b,_):_) -> b
+    startsWith xs c = c == head xs
+
