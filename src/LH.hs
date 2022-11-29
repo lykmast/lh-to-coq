@@ -172,6 +172,8 @@ transformInductive (Case (Var matchId) ident branches) = do
     mInds <- forM branches $ \(Pat con args, e) ->
                 case args of
                   []    -> return Nothing
+                  {- here we assume that induction happens on the
+                  first argument of the constructor. -}
                   (x:_) -> local (addInd x n) (transformInductive e)
     let
       mIdx                = findIndex isJust mInds
