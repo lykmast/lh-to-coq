@@ -57,9 +57,12 @@ instance Show Prop where
   show (Brel brel e1 e2) = show e1 ++ " = " ++ show e2
   show (And ps) = intercalate " /\\ " $ map show ps
 
-
 data Brel = Eq
 instance Show Brel where show Eq = "="
+
+-- Expressions in result of proof should be compared to true.
+proofExpr :: Expr -> Prop
+proofExpr e = Brel Eq e (Var "true")
 
 trivial = "smt_trivial"
 

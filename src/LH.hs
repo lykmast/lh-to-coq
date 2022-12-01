@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase #-}
 module LH where
 
 import qualified Coq as C
@@ -92,7 +93,12 @@ transPat (Pat con args) = C.Pat con args
 
 transExpr :: Expr -> C.Expr
 transExpr (App f es) = C.App f $ map transExpr es
-transExpr (Var x)    = C.Var x
+transExpr (Var x)    = C.Var $ handleId x
+  where
+    handleId = \case
+      "True"  -> "true"
+      "False" -> "false"
+      other   -> other
 transExpr (Let id e1 e2) = C.Let id (transExpr e1) (transExpr e2)
 transExpr (Case e b bs) = C.Match (transExpr e) b $ map (B.bimap transPat transExpr) bs
 transExpr Unit = C.Var "()"
@@ -127,8 +133,8 @@ transLHExpr e            = error "not an expression."
 transProp :: LHExpr -> C.Prop
 transProp (Brel brel e1 e2) = C.Brel (transBrel brel) (transLHExpr e1) (transLHExpr e2)
 transProp (And es) = C.And $ map transProp es
-transProp (LHApp f es) = C.PExpr $ C.App f $ map transLHExpr es
-transProp (LHVar x)    = C.PExpr $ C.Var x
+transProp (LHApp f es) = C.proofExpr $ C.App f $ map transLHExpr es
+transProp (LHVar x)    = C.proofExpr $ C.Var x
 
 data Environment =  Env
   { envName :: Id
