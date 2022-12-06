@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 echo out/Test.v > _CoqProject
 
