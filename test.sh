@@ -8,5 +8,6 @@ for file in lh-examples/*.hs; do
   outfile=out/${tmp%.hs}.v
   stack run -- ${file} > ${outfile} 
   echo Translation written in ${outfile}
+  [ "$CI" ] && echo ========== ${outfile} && cat ${outfile}
   echo ${outfile} | tail -n 1 >> _CoqProject 
 done
