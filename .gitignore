@@ -31,3 +31,4 @@ cabal.project.local~
 *.vos
 out/*.v
 _CoqProject
+*.cache
